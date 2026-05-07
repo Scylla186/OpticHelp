@@ -1,15 +1,23 @@
 package com.example.login2;
 
+import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.os.Build;
 
 import java.util.Locale;
 
-public class IdiomaUtils {
+public class IdiomaUtils extends Application {
 
     private static final String PREFS      = "optichelp_prefs";
     private static final String KEY_IDIOMA = "idioma";
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        aplicarIdioma(this);
+    }
 
     public static void aplicarIdioma(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -19,15 +27,8 @@ public class IdiomaUtils {
         if (idiomaGuardado != null) {
             idioma = idiomaGuardado;
         } else {
-            // Obtener idioma completo incluyendo variantes regionales
             String idiomaDispositivo = Locale.getDefault().getLanguage();
-            String paisDispositivo   = Locale.getDefault().getCountry().toUpperCase();
-
-            // Es español si el idioma empieza con "es" O si el país es hispanohablante
-            if (idiomaDispositivo.startsWith("es") || paisDispositivo.equals("CO")
-                    || paisDispositivo.equals("MX") || paisDispositivo.equals("ES")
-                    || paisDispositivo.equals("AR") || paisDispositivo.equals("PE")
-                    || paisDispositivo.equals("VE") || paisDispositivo.equals("CL")) {
+            if (idiomaDispositivo.equals("es")) {
                 idioma = "es";
             } else {
                 idioma = "en";
@@ -36,8 +37,14 @@ public class IdiomaUtils {
 
         Locale locale = new Locale(idioma);
         Locale.setDefault(locale);
-        Configuration config = new Configuration();
-        config.setLocale(locale);
+
+        Configuration config = context.getResources().getConfiguration();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            config.setLocale(locale);
+            context = context.createConfigurationContext(config);
+        } else {
+            config.locale = locale;
+        }
         context.getResources().updateConfiguration(config,
                 context.getResources().getDisplayMetrics());
     }
